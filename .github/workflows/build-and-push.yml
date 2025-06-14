@@ -1,43 +1,69 @@
-name: Build and Push React App
+# Name for your GitHub Actions workflow
+name: Build and Push Docker Image
 
+# This section defines when the workflow will be triggered
 on:
+  # Trigger the workflow on push events to the "main" branch
   push:
-    branches: [main]
+    branches: [ "main" ]
 
+  # Allows you to run this workflow manually from the Actions tab on GitHub
+  workflow_dispatch:
+
+# Defines the jobs that will be run. We only have one job here.
 jobs:
   build-and-push:
+    # Specifies that this job should run on the latest version of an Ubuntu runner
     runs-on: ubuntu-latest
 
-    env:
-      IMAGE_NAME: skoopy365/my-react-app
-
+    # A sequence of tasks that will be executed for this job
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # Step 1: Check out your repository's code so the workflow can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to DockerHub
+      # Step 2: Log in to Docker Hub using the secrets you stored in GitHub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Generate timestamp tag
-        id: tag
-        run: echo "TAG=$(date +'%Y.%m.%d-%H.%M.%S')" >> $GITHUB_OUTPUT
+      # Step 3: Extract metadata to create smart, useful tags for your Docker image
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          #
+          # !!! IMPORTANT: CUSTOMIZE THIS LINE !!!
+          # Change 'your-dockerhub-username/my-react-app' to your actual Docker Hub username and image name.
+          #
+          images: skoopy365/my-react-app
 
+          # This block defines the tagging strategy.
+          tags: |
+            # type=schedule creates a tag based on a time pattern.
+            # 'YYYYMMDD-HHmmss' is a chronologically sortable format.
+            # Example: 20240222-150000
+            type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
+
+            # type=ref creates a tag based on the Git reference.
+            # 'event=branch' means it will use the branch name. For 'main', it also creates 'latest'.
+            type=ref,event=branch
+
+            # type=sha creates a tag based on the Git commit SHA.
+            # 'format=short' uses the first 7 characters of the hash.
+            # Example: 30c565d
+            type=sha,prefix=,suffix=,format=short
+
+      # Step 4: Build the Docker image from your Dockerfile and push it to Docker Hub
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./my-react-app
+          # 'context: .' tells the action to use the current directory as the build context
+          context: .
+          # 'push: true' enables pushing the image to the registry
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.TAG }}
-
-      - name: Output tag
-           env:
-             TAG: ${{ steps.tag.outputs.TAG }}
-             IMAGE_NAME: ${{ env.IMAGE_NAME }}
-           run: echo "Image pushed: $IMAGE_NAME:$TAG"
-
+          # 'tags:' and 'labels:' are automatically populated by the output of the 'meta' step above
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
