@@ -41,19 +41,12 @@ jobs:
           images: skoopy365/my-react-app
 
           # This block defines the tagging strategy.
-                # Use this entire block to replace your existing step
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          # Make sure this line is still customized for you
-          images: your-dockerhub-username/my-react-app
-          
-          # The block you pasted, with correct indentation
+          # It is correctly indented under 'with:'.
           tags: |
             type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
             type=ref,event=branch
             type=sha,prefix=,suffix=,format=short
+
       # Step 4: Build the Docker image from your Dockerfile and push it to Docker Hub
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
