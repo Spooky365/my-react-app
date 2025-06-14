@@ -1,17 +1,14 @@
-name: Build and Push Docker Image
+# Name for your GitHub Actions workflow
+name: Build and Push Docker Image (Time Tag ONLY Test)
 
 on:
   push:
-    branches: [ "main" ]  # Trigger only on push to main
-  workflow_dispatch:       # Allow manual trigger from GitHub UI
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build-and-push-time-tag-test:
     runs-on: ubuntu-latest
-
-    env:
-      IMAGE_NAME: skoopy365/my-react-app  # 🔁 Change this to your Docker Hub image name
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,17 +19,26 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Generate timestamp tag
-        id: tag
-        run: echo "TAG=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+      # --- THIS IS THE TEST VERSION ---
+      # It has been simplified to ONLY produce the time-based tag.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          #
+          # !!! IMPORTANT: CUSTOMIZE THIS LINE !!!
+          #
+          images: skoopy365/my-react-app
 
+          # This tagging strategy ONLY includes the schedule-based tag.
+          tags: |
+            type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
+
+      # This step remains the same.
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./my-react-app  # 📁 Adjust if your Dockerfile is in a subfolder
+          context: .
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}
-
-      - name: Output pushed image
-        run: echo "Image pushed: ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
-
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
