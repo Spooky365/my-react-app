@@ -44,8 +44,6 @@ jobs:
           # It is correctly indented under 'with:'.
           tags: |
             type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
-            type=ref,event=branch
-            type=sha,prefix=,suffix=,format=short
 
       # Step 4: Build the Docker image from your Dockerfile and push it to Docker Hub
       - name: Build and push Docker image
