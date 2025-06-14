@@ -1,5 +1,5 @@
 # Name for your GitHub Actions workflow
-name: Build and Push Docker Image (Time Tag ONLY Test)
+name: Build and Push Docker Image (Final Version)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push-time-tag-test:
+  build-and-push-final:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -19,8 +19,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- THIS IS THE TEST VERSION ---
-      # It has been simplified to ONLY produce the time-based tag.
+      # --- THIS IS THE FINAL, CORRECTED VERSION OF THE METADATA STEP ---
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -30,9 +29,15 @@ jobs:
           #
           images: skoopy365/my-react-app
 
-          # This tagging strategy ONLY includes the schedule-based tag.
+          # This tagging strategy is robust and will work on push events.
           tags: |
-            type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
+            # type=raw allows us to use the 'date' function on any event.
+            # This is the correct way to get a timestamp on a push.
+            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+
+            # We are adding back the other two useful tags now that we've solved the main problem.
+            type=ref,event=branch
+            type=sha,format=short
 
       # This step remains the same.
       - name: Build and push Docker image
