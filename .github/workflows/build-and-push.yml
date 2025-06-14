@@ -36,8 +36,8 @@ jobs:
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
 
             # We are adding back the other two useful tags now that we've solved the main problem.
-            type=ref,event=branch
-            type=sha,format=short
+           # type=ref,event=branch
+           # type=sha,format=short
 
       # This step remains the same.
       - name: Build and push Docker image
