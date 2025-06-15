@@ -9,7 +9,7 @@ function App() {
         <img src={logo} className="App-logo" alt="logo" />
         <h1>Hello from my React App!</h1>
         <p>
-          This application is running inside a Docker container, served by NGINXXXXXXXX.
+          This application is running inside a Docker container, served by NGINxZZZZZZ.
         </p>
         <p>
           Next stop: Kubernetes via FluxCD!
